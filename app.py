@@ -6,13 +6,13 @@ Handles file upload, processing pipeline, and UI rendering
 import streamlit as st
 import os
 import time
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 from utils.stt import transcribe_audio
 from utils.translation import translate_text
 from utils.tts import generate_speech
 
 # Initialize environment configurations
-load_dotenv()
+# load_dotenv()
 os.makedirs("temp/uploads", exist_ok=True)
 os.makedirs("temp/outputs", exist_ok=True)
 
