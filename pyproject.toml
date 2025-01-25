@@ -1,0 +1,60 @@
+[tool.poetry]
+name = "teaching assistant"
+version = "0.1.0"
+description = "High-quality audio translation web application"
+authors = ["Your Name <your.email@example.com>"]
+license = "MIT"
+keywords = ["nlp", "translation", "speech-processing"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+
+# Core dependencies
+streamlit = "^1.31.1"
+pydub = "^0.25.1"
+python-dotenv = "^1.0.0"
+nltk = "^3.8.1"          # Text segmentation
+librosa = "^0.10.1"      # Advanced audio processing
+soundfile = "^0.12.1"    # Audio file I/O
+ffmpeg-python = "^0.2.0" # FFmpeg integration
+
+# Machine learning frameworks
+torch = { version = "^2.2.1", source = "pytorch" }
+transformers = { version = "^4.38.2", extras = ["audio"] }
+
+# Text-to-speech engine
+TTS = "^0.21.0"
+
+# Platform-specific dependencies
+torchaudio = { version = "^2.2.1", source = "pytorch", optional = true }
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.3.0"
+flake8 = "^6.1.0"
+mypy = "^1.8.0"
+pytest = "^8.0.2"
+
+[[tool.poetry.source]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cpu"
+priority = "exclusive"
+
+[build-system]
+requires = ["poetry-core>=1.3.2"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.extras]
+gpu = ["torchaudio"]
+
+[tool.poetry.scripts]
+start = "app:main"
+
+[project.urls]
+Documentation = "https://github.com/yourusername/audio-translator/wiki"
+Issue-Tracker = "https://github.com/yourusername/audio-translator/issues"
+
+# Configuration notes:
+# 1. Torch dependencies are sourced from PyTorch's official repository
+# 2. Transformers include audio processing extras
+# 3. GPU support can be enabled via: poetry install --extras "gpu"
+# 4. Platform-specific dependencies are handled through optional groups

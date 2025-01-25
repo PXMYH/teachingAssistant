@@ -1,19 +1,41 @@
+"""
+Text-to-Speech Module using YourTTS
+Handles speech synthesis and output generation
+"""
+
 from TTS.api import TTS
 import os
+import time
 
 def generate_speech(text):
-    """使用YourTTS生成中文语音"""
+    """
+    Convert Chinese text to natural-sounding speech
+    Args:
+        text: Input Chinese text
+    Returns:
+        Path to generated audio file
+    """
+    # Initialize TTS engine
     tts = TTS(
         model_name="tts_models/multilingual/multi-dataset/your_tts",
         progress_bar=False,
         gpu=False
     )
     
-    output_path = os.path.join("temp/outputs", f"output_{int(time.time())}.wav")
+    # Create unique output filename
+    output_path = os.path.join(
+        "temp/outputs", 
+        f"output_{int(time.time())}.wav"
+    )
     
-    # 使用示例参考语音（需自行准备或使用默认）
-    ref_voice = "assets/reference_voice.wav" if os.path.exists("assets/reference_voice.wav") else None
+    # Use reference voice if available
+    ref_voice = (
+        "assets/reference_voice.wav" 
+        if os.path.exists("assets/reference_voice.wav") 
+        else None
+    )
     
+    # Generate speech output
     tts.tts_to_file(
         text=text,
         speaker_wav=ref_voice,

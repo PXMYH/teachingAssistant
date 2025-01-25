@@ -1,3 +1,8 @@
+"""
+Main entry point for the Audio Translation Web Application
+Handles file upload, processing pipeline, and UI rendering
+"""
+
 import streamlit as st
 import os
 import time
@@ -6,81 +11,108 @@ from utils.stt import transcribe_audio
 from utils.translation import translate_text
 from utils.tts import generate_speech
 
-# 初始化环境
+# Initialize environment configurations
 load_dotenv()
 os.makedirs("temp/uploads", exist_ok=True)
 os.makedirs("temp/outputs", exist_ok=True)
 
-st.set_page_config(
-    page_title="Audio Translator",
-    page_icon="🎧",
-    layout="wide"
-)
+def configure_page():
+    """Set up Streamlit page configuration"""
+    st.set_page_config(
+        page_title="Audio Translator",
+        page_icon="🎧",
+        layout="wide",
+        initial_sidebar_state="expanded"
+    )
+    st.markdown("""
+        <style>
+            .reportview-container {margin-top: -2em;}
+            #MainMenu {visibility: hidden;}
+            .stDeployButton {display:none;}
+        </style>
+    """, unsafe_allow_html=True)
+
+def handle_file_processing(upload_path):
+    """
+    Execute the complete processing pipeline:
+    1. Speech-to-Text (STT)
+    2. Machine Translation
+    3. Text-to-Speech (TTS)
+    """
+    progress_bar = st.progress(0)
+    status_text = st.empty()
+    
+    try:
+        # STT Phase
+        status_text.markdown("🔍 **Performing Speech Recognition...**")
+        english_text = transcribe_audio(upload_path)
+        progress_bar.progress(30)
+        
+        # Translation Phase
+        status_text.markdown("🌐 **Translating Content...**")
+        chinese_text = translate_text(english_text)
+        progress_bar.progress(60)
+        
+        # TTS Phase
+        status_text.markdown("🎵 **Generating Chinese Speech...**")
+        output_path = generate_speech(chinese_text)
+        progress_bar.progress(100)
+        
+        # Display results
+        status_text.success("✅ Processing Complete!")
+        return english_text, chinese_text, output_path
+        
+    except Exception as e:
+        status_text.error(f"❌ Processing Failed: {str(e)}")
+        st.exception(e)
+        raise
+
+def render_results(english_text, chinese_text, output_path):
+    """Display processing results in organized columns"""
+    st.divider()
+    
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        st.subheader("Recognition Results")
+        st.code(english_text, language="text")
+        
+        st.subheader("Translation Results")
+        st.code(chinese_text, language="text")
+
+    with col2:
+        st.subheader("Audio Output")
+        st.audio(output_path)
+        with open(output_path, "rb") as f:
+            st.download_button(
+                label="Download Audio",
+                data=f,
+                file_name="translated_audio.wav",
+                mime="audio/wav"
+            )
 
 def main():
-    st.title("🎧 高精度音频翻译系统")
-    st.markdown("上传英文音频 → 获取中文语音")
+    """Main application workflow"""
+    configure_page()
+    st.title("🎧 High-Quality Audio Translation System")
+    st.markdown("Upload English Audio → Get Chinese Speech Output")
 
-    # 文件上传区域
+    # File uploader widget
     uploaded_file = st.file_uploader(
-        "选择音频文件 (MP3/WAV)",
+        "Select Audio File (MP3/WAV)",
         type=["mp3", "wav"],
         accept_multiple_files=False
     )
 
-    if uploaded_file is not None:
-        # 保存上传文件
+    if uploaded_file:
+        # Save uploaded file
         upload_path = os.path.join("temp/uploads", uploaded_file.name)
         with open(upload_path, "wb") as f:
             f.write(uploaded_file.getbuffer())
-
-        # 处理进度可视化
-        progress_bar = st.progress(0)
-        status_text = st.empty()
-
-        try:
-            # 语音识别
-            status_text.markdown("🔍 **正在识别语音...**")
-            english_text = transcribe_audio(upload_path)
-            progress_bar.progress(30)
-            
-            # 文本翻译
-            status_text.markdown("🌐 **正在翻译文本...**")
-            chinese_text = translate_text(english_text)
-            progress_bar.progress(60)
-            
-            # 语音合成
-            status_text.markdown("🎵 **正在生成中文语音...**")
-            output_path = generate_speech(chinese_text)
-            progress_bar.progress(100)
-            
-            # 显示结果
-            status_text.success("✅ 处理完成！")
-            st.divider()
-            
-            # 结果展示列
-            col1, col2 = st.columns(2)
-            with col1:
-                st.subheader("识别结果")
-                st.code(english_text, language="text")
-                
-                st.subheader("翻译结果")
-                st.code(chinese_text, language="text")
-
-            with col2:
-                st.subheader("中文语音")
-                st.audio(output_path)
-                with open(output_path, "rb") as f:
-                    st.download_button(
-                        label="下载音频",
-                        data=f,
-                        file_name="translated_audio.wav",
-                        mime="audio/wav"
-                    )
-
-        except Exception as e:
-            status_text.error(f"❌ 处理失败: {str(e)}")
-            st.exception(e)
+        
+        # Execute processing pipeline
+        results = handle_file_processing(upload_path)
+        if results:
+            render_results(*results)
 
 if __name__ == "__main__":
     main()
